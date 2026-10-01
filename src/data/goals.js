@@ -1,0 +1,80 @@
+export const initialGoals = [
+  {
+    id: 'g1',
+    name: 'Weight Goal',
+    category: 'Body Weight',
+    current: 68.5,
+    target: 65.0,
+    unit: 'kg',
+    progress: 75,
+    deadline: '2026-11-30',
+    description: 'Target weight loss at a steady 0.5kg per week.',
+    color: '#3B82F6',
+    status: 'In Progress'
+  },
+  {
+    id: 'g2',
+    name: 'Weekly Workout Goal',
+    category: 'Workout',
+    current: 4,
+    target: 5,
+    unit: 'workouts',
+    progress: 80,
+    deadline: '2026-09-28',
+    description: 'Complete 5 sessions (Strength + Cardio mix).',
+    color: '#10B981',
+    status: 'In Progress'
+  },
+  {
+    id: 'g3',
+    name: 'Daily Steps Goal',
+    category: 'Activity',
+    current: 7850,
+    target: 10000,
+    unit: 'steps',
+    progress: 78.5,
+    deadline: 'Daily',
+    description: 'Maintain active daily movement and walking intervals.',
+    color: '#8B5CF6',
+    status: 'In Progress'
+  },
+  {
+    id: 'g4',
+    name: 'Water Intake Goal',
+    category: 'Hydration',
+    current: 1.8,
+    target: 2.5,
+    unit: 'L',
+    progress: 72,
+    deadline: 'Daily',
+    description: 'Drink 2.5 Liters of water for optimal recovery.',
+    color: '#06B6D4',
+    status: 'In Progress'
+  },
+  {
+    id: 'g5',
+    name: 'Protein Goal',
+    category: 'Nutrition',
+    current: 120,
+    target: 150,
+    unit: 'g',
+    progress: 80,
+    deadline: 'Daily',
+    description: 'Hit 150g daily protein target for muscle repair.',
+    color: '#F59E0B',
+    status: 'In Progress'
+  },
+  {
+    id: 'g6',
+    name: 'Sleep Quality',
+    category: 'Recovery',
+    current: 7.5,
+    target: 8.0,
+    unit: 'hrs',
+    progress: 93,
+    deadline: 'Daily',
+    description: 'Get at least 8 hours of uninterrupted restful sleep.',
+    color: '#EC4899',
+    status: 'In Progress'
+  }
+];
