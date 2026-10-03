@@ -11,13 +11,13 @@ import {
 } from 'recharts';
 
 const defaultWeeklyData = [
-  { day: 'Mon', calories: 420, duration: 45, exercises: 8 },
-  { day: 'Tue', calories: 320, duration: 35, exercises: 6 },
-  { day: 'Wed', calories: 510, duration: 55, exercises: 10 },
-  { day: 'Thu', calories: 280, duration: 30, exercises: 5 },
-  { day: 'Fri', calories: 580, duration: 60, exercises: 12 },
-  { day: 'Sat', calories: 250, duration: 25, exercises: 4 },
-  { day: 'Sun', calories: 380, duration: 40, exercises: 7 }
+  { day: 'Mon', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Tue', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Wed', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Thu', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Fri', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Sat', calories: 0, duration: 0, exercises: 0 },
+  { day: 'Sun', calories: 0, duration: 0, exercises: 0 }
 ];
 
 export default function WeeklyProgressChart({ data }) {

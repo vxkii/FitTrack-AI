@@ -10,7 +10,17 @@ import {
   ReferenceLine
 } from 'recharts';
 
-export default function WeightChart({ data }) {
+export default function WeightChart({ data, targetWeight = null }) {
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return (
+      <div className="w-full h-72 flex items-center justify-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200 text-xs text-slate-400 font-semibold">
+        No weight history check-ins logged yet.
+      </div>
+    );
+  }
+
+  const hasTarget = targetWeight != null && !isNaN(Number(targetWeight)) && Number(targetWeight) > 0;
+
   return (
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
@@ -42,12 +52,14 @@ export default function WeightChart({ data }) {
             formatter={(value) => [`${value} kg`, 'Bi-Weekly Weight']}
             labelFormatter={(label) => `Cycle: ${label}`}
           />
-          <ReferenceLine
-            y={65.0}
-            label={{ value: 'Target Goal: 65 kg', fill: '#10B981', fontSize: 11, position: 'top' }}
-            stroke="#10B981"
-            strokeDasharray="4 4"
-          />
+          {hasTarget && (
+            <ReferenceLine
+              y={Number(targetWeight)}
+              label={{ value: `Target Goal: ${targetWeight} kg`, fill: '#10B981', fontSize: 11, position: 'top' }}
+              stroke="#10B981"
+              strokeDasharray="4 4"
+            />
+          )}
           <Line
             type="monotone"
             dataKey="weight"

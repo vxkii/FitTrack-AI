@@ -1,8 +1,8 @@
 import React from 'react';
-import { Target, Calendar, CheckCircle2, Edit2 } from 'lucide-react';
+import { Target, Calendar, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 
-export default function GoalCard({ goal, onEdit }) {
+export default function GoalCard({ goal, onEdit, onDelete }) {
   const isComplete = goal.progress >= 100;
 
   return (
@@ -25,6 +25,15 @@ export default function GoalCard({ goal, onEdit }) {
               title="Edit Goal"
             >
               <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(goal)}
+              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg transition-colors"
+              title="Delete Goal"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
           )}
           <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${isComplete

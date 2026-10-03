@@ -24,6 +24,13 @@ import Modal from '../components/Modal';
 import ActiveWorkoutModal from '../components/ActiveWorkoutModal';
 import { initialProgress } from '../data/progress';
 import { workoutsData } from '../data/workouts';
+import {
+  subscribeToWorkoutHistory,
+  subscribeToMealHistory,
+  subscribeToWaterHistory,
+  calculateWeeklyActivity,
+  calculateTodayStats
+} from '../services/firebaseAuth';
 
 export default function Dashboard() {
   const { user: authUser } = useAuth();
@@ -32,7 +39,72 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [activeSessionWorkout, setActiveSessionWorkout] = useState(null);
+  const [weeklyActivity, setWeeklyActivity] = useState([]);
+  const [todayStats, setTodayStats] = useState({
+    workoutMinutesToday: 0,
+    caloriesToday: 0,
+    waterLitersToday: 0,
+    stepsToday: 0
+  });
   const featuredWorkout = workoutsData[0]; // Full Body Strength
+
+  // Realtime subscription for weekly progress (Monday - Sunday)
+  useEffect(() => {
+    const uid = authUser?.uid || auth.currentUser?.uid;
+    if (!uid) {
+      setWeeklyActivity(calculateWeeklyActivity([]));
+      return;
+    }
+
+    const unsubscribe = subscribeToWorkoutHistory(uid, (history) => {
+      const calculated = calculateWeeklyActivity(history);
+      setWeeklyActivity(calculated);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [authUser?.uid]);
+
+  // Realtime subscription for Daily Goals (Workout, Calories, Water, Steps)
+  useEffect(() => {
+    const uid = authUser?.uid || auth.currentUser?.uid;
+    if (!uid) {
+      setTodayStats({ workoutMinutesToday: 0, caloriesToday: 0, waterLitersToday: 0, stepsToday: 0 });
+      return;
+    }
+
+    let workoutHistory = [];
+    let mealHistory = [];
+    let waterHistory = [];
+
+    const updateStats = () => {
+      setTodayStats(calculateTodayStats(workoutHistory, mealHistory, waterHistory));
+    };
+
+    const unsubWorkouts = subscribeToWorkoutHistory(uid, (wHistory) => {
+      workoutHistory = wHistory;
+      updateStats();
+    });
+
+    const unsubMeals = subscribeToMealHistory(uid, (mHistory) => {
+      mealHistory = mHistory;
+      updateStats();
+    });
+
+    const unsubWater = subscribeToWaterHistory(uid, (wtrHistory) => {
+      waterHistory = wtrHistory;
+      updateStats();
+    });
+
+    return () => {
+      if (typeof unsubWorkouts === 'function') unsubWorkouts();
+      if (typeof unsubMeals === 'function') unsubMeals();
+      if (typeof unsubWater === 'function') unsubWater();
+    };
+  }, [authUser?.uid]);
 
   useEffect(() => {
     let isMounted = true;
@@ -247,7 +319,7 @@ export default function Dashboard() {
             </span>
           </div>
           <div className="min-w-0 w-full overflow-hidden">
-            <WeeklyProgressChart data={initialProgress.weeklyActivity} />
+            <WeeklyProgressChart data={weeklyActivity} />
           </div>
         </div>
 
@@ -301,14 +373,16 @@ export default function Dashboard() {
         <div className="card space-y-4 min-w-0">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-slate-900 text-base sm:text-lg">Daily Goals</h3>
-            <span className="text-xs text-slate-400">Sep 23, 2026</span>
+            <span className="text-xs text-slate-400 font-semibold">
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
           </div>
 
           <div className="space-y-4">
-            <ProgressBar label="Steps" current={7850} max={10000} unit="steps" color="purple" />
-            <ProgressBar label="Water" current={1.8} max={2.5} unit="L" color="cyan" />
-            <ProgressBar label="Calories" current={1840} max={2200} unit="kcal" color="amber" />
-            <ProgressBar label="Workout" current={30} max={45} unit="min" color="green" />
+            <ProgressBar label="Steps" current={todayStats.stepsToday} max={10000} unit="steps (Untracked)" color="purple" />
+            <ProgressBar label="Water" current={todayStats.waterLitersToday} max={2.5} unit="L" color="cyan" />
+            <ProgressBar label="Calories" current={todayStats.caloriesToday} max={2200} unit="kcal" color="amber" />
+            <ProgressBar label="Workout" current={todayStats.workoutMinutesToday} max={45} unit="min" color="green" />
           </div>
         </div>
 

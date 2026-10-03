@@ -5,10 +5,92 @@ import UserAvatar from '../components/UserAvatar';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { initialProfile } from '../data/userProfile';
+import { subscribeToWorkoutHistory } from '../services/firebaseAuth';
 
 export default function Profile() {
   const { user, updateProfile } = useAuth();
   const { showToast } = useToast();
+
+  const [statsSummary, setStatsSummary] = useState({
+    totalWorkouts: 0,
+    totalHours: '0',
+    caloriesBurned: '0',
+    streakDays: 0
+  });
+
+  useEffect(() => {
+    const uid = user?.uid || user?.id;
+    if (!uid) return;
+
+    const unsubscribe = subscribeToWorkoutHistory(uid, (history) => {
+      if (!Array.isArray(history) || history.length === 0) {
+        setStatsSummary({
+          totalWorkouts: 0,
+          totalHours: '0',
+          caloriesBurned: '0',
+          streakDays: 0
+        });
+        return;
+      }
+
+      let totalWorkouts = history.length;
+      let totalMinutes = 0;
+      let totalCalories = 0;
+      const datesSet = new Set();
+
+      history.forEach((item) => {
+        const rawDur = Number(item.duration) || Number(item.durationMinutes) || 0;
+        const durMin = rawDur > 120 ? Math.round(rawDur / 60) : rawDur;
+        totalMinutes += durMin;
+
+        const cal = Number(item.calories) || Number(item.caloriesBurned) || 0;
+        totalCalories += cal;
+
+        if (item.completedAt) {
+          const dateStr = new Date(item.completedAt).toISOString().split('T')[0];
+          if (dateStr) datesSet.add(dateStr);
+        }
+      });
+
+      // Calculate streak
+      let streakDays = 0;
+      if (datesSet.size > 0) {
+        let checkDate = new Date();
+        let todayStr = checkDate.toISOString().split('T')[0];
+        
+        if (!datesSet.has(todayStr)) {
+          checkDate.setDate(checkDate.getDate() - 1);
+          let yesterdayStr = checkDate.toISOString().split('T')[0];
+          if (!datesSet.has(yesterdayStr)) {
+            streakDays = 0;
+          } else {
+            while (datesSet.has(checkDate.toISOString().split('T')[0])) {
+              streakDays++;
+              checkDate.setDate(checkDate.getDate() - 1);
+            }
+          }
+        } else {
+          while (datesSet.has(checkDate.toISOString().split('T')[0])) {
+            streakDays++;
+            checkDate.setDate(checkDate.getDate() - 1);
+          }
+        }
+      }
+
+      const hoursNum = Math.round((totalMinutes / 60) * 10) / 10;
+
+      setStatsSummary({
+        totalWorkouts,
+        totalHours: hoursNum % 1 === 0 ? hoursNum.toString() : hoursNum.toFixed(1),
+        caloriesBurned: totalCalories.toLocaleString(),
+        streakDays
+      });
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [user?.uid, user?.id]);
 
   const currentProfile = {
     name: user?.name || initialProfile.name,
@@ -19,7 +101,7 @@ export default function Profile() {
     fitnessGoal: user?.fitnessGoal || initialProfile.fitnessGoal,
     activityLevel: user?.activityLevel || initialProfile.activityLevel,
     memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : initialProfile.memberSince,
-    statsSummary: initialProfile.statsSummary
+    statsSummary
   };
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -125,7 +207,7 @@ export default function Profile() {
             </div>
             <div>
               <span className="text-xs text-slate-400 block font-medium">Workouts</span>
-              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary?.totalWorkouts ?? 48} completed</span>
+              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary.totalWorkouts} completed</span>
             </div>
           </div>
 
@@ -135,7 +217,7 @@ export default function Profile() {
             </div>
             <div>
               <span className="text-xs text-slate-400 block font-medium">Active Time</span>
-              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary?.totalHours ?? 36} hrs total</span>
+              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary.totalHours} hrs total</span>
             </div>
           </div>
 
@@ -145,7 +227,7 @@ export default function Profile() {
             </div>
             <div>
               <span className="text-xs text-slate-400 block font-medium">Calories Burned</span>
-              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary?.caloriesBurned ?? '18,400'} kcal</span>
+              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary.caloriesBurned} kcal</span>
             </div>
           </div>
 
@@ -155,7 +237,7 @@ export default function Profile() {
             </div>
             <div>
               <span className="text-xs text-slate-400 block font-medium">Active Streak</span>
-              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary?.streakDays ?? 12} Days streak</span>
+              <span className="font-extrabold text-slate-900">{currentProfile.statsSummary.streakDays} Days streak</span>
             </div>
           </div>
         </div>
